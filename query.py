@@ -66,7 +66,83 @@ Respond with ONLY a number from 1 to 10.
 
 
 # 🔹 Main RAG function
-def query_rag(user_query, top_k=10):
+# 🔹 Main RAG function
+def query_rag(user_query, top_k=10, stream=False):
+
+    # ✅ Cache check
+    if user_query in query_cache:
+        print("⚡ Cache hit!")
+        return query_cache[user_query]
+
+    index = faiss.read_index("embeddings/index.faiss")
+
+    with open("embeddings/chunks.pkl", "rb") as f:
+        chunks = pickle.load(f)
+
+    query_embedding = get_embedding(user_query).reshape(1, -1)
+
+    distances, indices = index.search(query_embedding, top_k)
+
+    retrieved_chunks = [chunks[i] for i in indices[0]]
+    retrieved_chunks = list(dict.fromkeys(retrieved_chunks))
+    retrieved_chunks = [c for c in retrieved_chunks if len(c.strip()) > 20]
+
+    # 🔥 Re-ranking
+    retrieved_chunks = llm_re_rank_chunks(user_query, retrieved_chunks, client, top_n=3)
+
+    if not retrieved_chunks:
+        return "I don't know"
+
+    context = "\n".join(retrieved_chunks)
+
+    prompt = f"""
+You are a strict AI assistant.
+
+Use ONLY the context below.
+Do NOT use prior knowledge.
+If the answer is not explicitly present, say "I don't know".
+
+Context:
+{context}
+
+Question:
+{user_query}
+"""
+
+    # 🔥 NON-STREAM MODE (for API)
+    if not stream:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        answer = response.choices[0].message.content
+        query_cache[user_query] = answer
+        return answer
+
+    # 🔥 STREAM MODE (for CLI)
+    else:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[{"role": "user", "content": prompt}],
+            stream=True
+        )
+
+        print("\n⚡ Generating response...\n")
+
+        answer = ""
+
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                token = chunk.choices[0].delta.content
+                print(token, end="", flush=True)
+                answer += token
+
+        print("\n")
+
+        query_cache[user_query] = answer
+        return answer
+# def query_rag(user_query, top_k=10):
 
     # ✅ Cache check
     if user_query in query_cache:
