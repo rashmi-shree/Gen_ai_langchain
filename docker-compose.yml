@@ -1,0 +1,10 @@
+services:
+  rag-app:
+    build: .
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    volumes:
+      - ./embeddings:/app/embeddings
+      - ./data:/app/data
