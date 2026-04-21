@@ -1,0 +1,23 @@
+# What is RAG
+Retrieval Augmented Generation (RAG) is a technique in artificial intelligence that enhances large language models by retrieving relevant external information and using it to generate responses. Instead of relying only on pre-trained knowledge, RAG grounds answers in real data.
+
+# How RAG Works
+The RAG pipeline involves multiple steps:
+1. Document ingestion – collecting raw data.
+2. Chunking – splitting documents into smaller meaningful pieces.
+3. Embedding – converting text into vector representations.
+4. Storage – saving embeddings in a vector database.
+5. Retrieval – finding relevant chunks using similarity search.
+6. Generation – using retrieved context to produce an answer.
+
+# Benefits of RAG
+RAG reduces hallucinations, improves factual accuracy, and allows models to access up-to-date information without retraining.
+
+# RAG vs Fine-tuning
+RAG uses external data at query time, while fine-tuning updates the model weights. RAG is cheaper and more flexible, while fine-tuning is better for deeply specialized tasks.
+
+# Vector Databases
+Vector databases like FAISS and Pinecone store embeddings and allow fast similarity search. They are essential for efficient retrieval in RAG systems.
+
+# Challenges in RAG
+Common challenges include poor chunking, irrelevant retrieval, latency issues, and maintaining data freshness.
